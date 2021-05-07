@@ -15,9 +15,23 @@
             </div>
             <!-- Table components -->
             <Table v-else :loading="loader" :table="dataTable"></Table>
+            <Paginate
+                    :page-count='totalPage'
+                    :click-handler='clickHandler'
+                    :prev-text="'Пред'"
+                    :container-class="'pagination'"
+                    :next-text="'След'"
+                    :prev-class="'page-item'"
+                    :prev-link-class="'page-link'"
+                    :next-link-class="'page-link'"
+                    :next-class="'page-item'"
+                    :page-class="'page-item'"
+                    :active-class="'active'"
+                    :page-link-class="'page-link'"
+            />
         </div>
         <!-- Modal components -->
-        <Modal @array="getObject"></Modal>
+        <Modal @array="getObject" @dataRes="getDataInModal" :data="dataTable"></Modal>
     </div>
 </template>
 
@@ -33,7 +47,10 @@
         data() {
             return {
                 dataTable: [],
-                loader: false
+                loader:    false,
+                perPage: 10,
+                currentPage: 1,
+                totalPage: 0
             }
         },
         mounted() {
@@ -42,18 +59,33 @@
         methods:    {
             async getDataTable() {
                 this.loader = true
-                await this.$store.dispatch('goods')
+                await this.$store.dispatch('goods', {
+                    params: {
+                        page:    this.currentPage,
+                        per_page: this.perPage
+                    }
+                })
+                this.totalPage = Math.ceil(this.$store.getters.totalPage / this.$store.getters.perPage)
                 this.dataTable = this.$store.getters.dataTable
-                // сделал исскуственную задержку на 4 секунды
-                setTimeout(this.loaderFalse, 4000)
+                // сделал исскуственную задержку на 2 секунды
+                setTimeout(this.loaderFalse, 2000)
             },
             loaderFalse() {
-              this.loader = false
+                this.loader = false
             },
             getObject(arr) {
-                this.loader = true
+                this.loader    = true
                 this.dataTable = arr
-                setTimeout(this.loaderFalse, 4000)
+                setTimeout(this.loaderFalse, 2000)
+            },
+            getDataInModal(arr) {
+                this.loader    = true
+                this.dataTable = arr
+                setTimeout(this.loaderFalse, 2000)
+            },
+            clickHandler(page) {
+                this.currentPage = page
+                this.getDataTable()
             }
         }
     }
@@ -67,6 +99,13 @@
         .Link {
             text-decoration: none;
             color: cornflowerblue;
+        }
+
+        .pagination {
+            .active {
+                color: #fff;
+                background: #1f2937;
+            }
         }
     }
 </style>

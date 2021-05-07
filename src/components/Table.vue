@@ -79,7 +79,7 @@
             </thead>
             <tbody>
             <tr v-for="(good, idx) in table" :key="good.id">
-                <th scope="row">{{idx + 1}}</th>
+                <th scope="row">{{good.id}}</th>
                 <td>{{good.name}}</td>
                 <td>{{good.vendor_code}}</td>
                 <td>{{good.category}}</td>
