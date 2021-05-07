@@ -31,7 +31,7 @@
             />
         </div>
         <!-- Modal components -->
-        <Modal @array="getObject" @dataRes="getDataInModal" :data="dataTable"></Modal>
+        <Modal @array="getObject" @dataRes="getDataInModal" @totalPage="getTotalPage" :data="dataTable"></Modal>
     </div>
 </template>
 
@@ -86,6 +86,9 @@
             clickHandler(page) {
                 this.currentPage = page
                 this.getDataTable()
+            },
+            getTotalPage(page) {
+                this.totalPage = page
             }
         }
     }

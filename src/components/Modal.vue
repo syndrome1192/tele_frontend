@@ -311,7 +311,14 @@
                 this.filters.created_at.quote            = ""
                 this.filters.created_at.value            = ""
                 this.$v.$reset()
-                await this.$store.dispatch('goods')
+                await this.$store.dispatch('goods', {
+                    params: {
+                        page:    1,
+                        per_page: 10
+                    }
+                })
+                let res = Math.ceil(this.$store.getters.totalPage / this.$store.getters.perPage)
+                this.$emit('totalPage', res)
                 this.$emit('dataRes', this.$store.getters.dataTable)
             },
 
