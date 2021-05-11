@@ -16,6 +16,7 @@
             <!-- Table components -->
             <Table v-else :loading="loader" :table="dataTable"></Table>
             <Paginate
+                    v-show="status"
                     :page-count='totalPage'
                     :click-handler='clickHandler'
                     :prev-text="'Пред'"
@@ -29,15 +30,28 @@
                     :active-class="'active'"
                     :page-link-class="'page-link'"
             />
+            <Paginate
+                    v-show="!status"
+                    :page-count='filter.totalPage'
+                    :click-handler='filterHandler'
+                    :prev-text="'Пред'"
+                    :container-class="'pagination'"
+                    :next-text="'След'"
+                    :prev-class="'page-item'"
+                    :prev-link-class="'page-link'"
+                    :next-link-class="'page-link'"
+                    :next-class="'page-item'"
+                    :page-class="'page-item'"
+                    :disabled-class="'disabled'"
+                    :page-link-class="'page-link'"
+            />
         </div>
         <!-- Modal components -->
-        <Modal @array="getObject" @dataRes="getDataInModal" @totalPage="getTotalPage" :data="dataTable"></Modal>
+        <Modal @array="getObject" :pages="filter.page" @status="checkStatus" @filter="getPages" @dataRes="getDataInModal"  :data="dataTable"></Modal>
     </div>
 </template>
 
 <script>
-
-
     export default {
         name:       'Home',
         components: {
@@ -50,11 +64,24 @@
                 loader:    false,
                 perPage: 10,
                 currentPage: 1,
-                totalPage: 0
+                totalPage: 0,
+                status: true,
+                filter: {
+                    perPage: 3,
+                    page: 1,
+                    totalPage: 0
+                }
             }
         },
         mounted() {
             this.getDataTable()
+        },
+        watch: {
+            currentPage(num){
+                if (this.currentPage === num) {
+                    this.getDataTable()
+                }
+            }
         },
         methods:    {
             async getDataTable() {
@@ -85,10 +112,16 @@
             },
             clickHandler(page) {
                 this.currentPage = page
-                this.getDataTable()
             },
-            getTotalPage(page) {
-                this.totalPage = page
+            filterHandler(page) {
+                this.filter.page = page
+            },
+            getPages(obj) {
+                this.status = false
+                this.filter.totalPage = Math.ceil(this.$store.getters.totalPage / this.$store.getters.perPage)
+            },
+            checkStatus(bool) {
+                this.status = bool
             }
         }
     }

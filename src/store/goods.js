@@ -5,7 +5,8 @@ export default {
         dataTable:   [],
         selectTable: [],
         totalPage: 0,
-        perPage: 0
+        perPage: 0,
+        page: 1
 
     },
     actions:   {
@@ -25,7 +26,8 @@ export default {
                 }
             })
             await instance.post('http://127.0.0.1:8000/api/filter', payload).then(response => {
-                commit('dataSuccess', response.data.data)
+                commit('dataSuccess', response.data.data.data)
+                commit('pagination', response.data.data)
             }).catch(e => {
                 console.log(e)
             })
@@ -46,12 +48,14 @@ export default {
         pagination(state, data) {
             state.totalPage = data.total
             state.perPage = data.per_page
+            state.page = data.page
         }
     },
     getters:   {
         dataTable:   state => state.dataTable,
         selectTable: state => state.selectTable,
         totalPage: state => state.totalPage,
-        perPage: state => state.perPage
+        perPage: state => state.perPage,
+        page: state => state.page
     }
 }

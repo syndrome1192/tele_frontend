@@ -26,6 +26,22 @@
                         <div class="d-flex mb-2">
                             <div class="form-check align-self-center w-50">
                                 <input v-model="checkedCheckbox"
+                                       @click="statuses.statusVendorCode = !statuses.statusVendorCode"
+                                       :class="{'is-invalid': $v.filters.vendor_code.$error}" value="vendor_code"
+                                       class="form-check-input" type="checkbox">
+                                <label class="form-check-label">
+                                    По Артикулу
+                                </label>
+                            </div>
+                            <div class="form-control w-25 h-25" style="border: none !important;"></div>
+                            <input type="text" v-show="statuses.statusVendorCode"
+                                   :class="{'is-invalid': $v.filters.vendor_code.$error}" v-model="filters.vendor_code"
+                                   class="form-control w-50 h-50 mx-4"
+                                   style="margin-right: 22px !important; margin-left: 32px;">
+                        </div>
+                        <div class="d-flex mb-2">
+                            <div class="form-check align-self-center w-50">
+                                <input v-model="checkedCheckbox"
                                        @click="statuses.statusCategory = !statuses.statusCategory"
                                        :class="{'is-invalid': $v.filters.category.value.$error}" value="category"
                                        class="form-check-input" type="checkbox">
@@ -149,9 +165,22 @@
 <script>
     import {required} from "vuelidate/lib/validators";
 
+
     export default {
+        props:   {
+            pages: Number
+        },
+        watch:   {
+            pages(num) {
+                if (num) {
+                    this.currentPage = num
+                    this.createFilter()
+                }
+            }
+        },
         data() {
             return {
+                currentPage:          1,
                 dataCategory:         [],
                 dataProductCondition: [],
                 checkedCheckbox:      [],
@@ -163,7 +192,8 @@
                     statusWeight:           false,
                     statusCostPrice:        false,
                     statusProductCondition: false,
-                    statusCreatedAt:        false
+                    statusCreatedAt:        false,
+                    statusVendorCode:       false
                 },
                 filters:              {
                     name:              "",
@@ -191,7 +221,8 @@
                         tableName: 'created_at',
                         quote:     "",
                         value:     ""
-                    }
+                    },
+                    vendor_code:       ""
                 }
             }
         },
@@ -216,7 +247,9 @@
                     created_at:        {
                         quote: this.statuses.statusCreatedAt ? {required} : {},
                         value: this.statuses.statusCreatedAt ? {required} : {},
-                    }
+                    },
+                    vendor_code:       this.statuses.statusVendorCode ? {required} : {}
+
                 }
             }
         },
@@ -244,26 +277,29 @@
                     case this.$v.filters.category.value.$invalid:
                         this.$v.filters.category.value.$touch()
                         return false
-                    case (
-                        this.$v.filters.weight.value.$invalid && this.$v.filters.weight.quote.$invalid
-                    ):
+                    case this.$v.filters.weight.value.$invalid:
                         this.$v.filters.weight.value.$touch()
+                        return false
+                    case this.$v.filters.weight.quote.$invalid:
                         this.$v.filters.weight.quote.$touch()
                         return false
-                    case (
-                        this.$v.filters.cost_price.value.$invalid && this.$v.filters.cost_price.quote.$invalid
-                    ):
+                    case this.$v.filters.cost_price.value.$invalid:
                         this.$v.filters.cost_price.value.$touch()
+                        return false
+                    case this.$v.filters.cost_price.quote.$invalid:
                         this.$v.filters.cost_price.quote.$touch()
                         return false
                     case this.$v.filters.product_condition.value.$invalid:
                         this.$v.filters.product_condition.value.$touch()
                         return false
-                    case (
-                        this.$v.filters.created_at.value.$invalid && this.$v.filters.created_at.quote.$invalid
-                    ):
+                    case this.$v.filters.created_at.value.$invalid:
                         this.$v.filters.created_at.value.$touch()
+                        return false
+                    case this.$v.filters.created_at.quote.$invalid:
                         this.$v.filters.created_at.quote.$touch()
+                        return false
+                    case this.$v.filters.vendor_code.$invalid:
+                        this.$v.filters.vendor_code.$touch()
                         return false
                 }
 
@@ -281,7 +317,15 @@
                     }
                 }
 
-                await this.$store.dispatch('filter', createResponseData)
+                let finalResult = {
+                    data:     createResponseData,
+                    per_page: 3,
+                    page:     this.currentPage
+                }
+
+                await this.$store.dispatch('filter', finalResult)
+
+                this.$emit("filter", {perPage: this.$store.getters.perPage, totalPage: this.$store.getters.totalPage})
 
                 this.$emit('array', this.$store.getters.dataTable)
             },
@@ -294,7 +338,9 @@
                 this.statuses.statusCategory             = false
                 this.statuses.statusName                 = false
                 this.statuses.statusWeight               = false
+                this.statuses.statusVendorCode           = false
                 this.filters.name                        = ""
+                this.filters.vendor_code                 = ""
                 this.filters.category.tableName          = 'category'
                 this.filters.category.quote              = "="
                 this.filters.category.value              = ""
@@ -310,14 +356,17 @@
                 this.filters.created_at.tableName        = 'created_at'
                 this.filters.created_at.quote            = ""
                 this.filters.created_at.value            = ""
+
                 this.$v.$reset()
+                this.$emit("status", true)
                 await this.$store.dispatch('goods', {
                     params: {
-                        page:    1,
+                        page:     1,
                         per_page: 10
                     }
                 })
                 let res = Math.ceil(this.$store.getters.totalPage / this.$store.getters.perPage)
+
                 this.$emit('totalPage', res)
                 this.$emit('dataRes', this.$store.getters.dataTable)
             },
